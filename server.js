@@ -17,9 +17,13 @@ const UserRoutes = require('./routes/UserRoutes');
 const app = express();
 
 // Middlewares
-app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors({
+  origin: ["https://pradeepdev.site", "https://courageous-sundae-845cb0.netlify.app"],
+  credentials: true
+}));
+
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
