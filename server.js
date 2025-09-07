@@ -12,41 +12,52 @@ const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require("./routes/orderRoutes");
 const UserRoutes = require('./routes/UserRoutes');
 
-
-
 const app = express();
 
-// Middlewares
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const allowedOrigins = [
+  "https://pradeepdev.site",
+  "https://courageous-sundae-845cb0.netlify.app",
+  "https://68bdc522b7237e490d403ec8--courageous-sundae-845cb0.netlify.app"
+];
+
 app.use(cors({
-  origin: ["https://pradeepdev.site", "https://courageous-sundae-845cb0.netlify.app"],
-  credentials: true
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman, curl
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error("CORS policy does not allow access from this origin."), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
 }));
 
 
+
+// Body parser
+app.use(express.json());
+
+// Serve uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log(' MongoDB connected'))
-  .catch(err => console.error(' MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-
-
-// authRoutes
+// Routes
 app.use('/api/auth', authRoutes);
-// adminRoutes
 app.use('/api/admin', AdminRoutes);
-// homeRoutes
 app.use('/api/home', homeRoutes);
-// userRoutes
 app.use('/api/user', UserRoutes);
-// cartRoutes
 app.use('/api/cart', cartRoutes);
-// orderRoutes
 app.use('/api/order', orderRoutes);
 
+// Handle preflight OPTIONS requests
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
-
-// Server start
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
