@@ -1,14 +1,15 @@
 // controllers/orderController.js
 const { Cashfree } = require("cashfree-pg");
 const Order = require("../models/Order");
+const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
 
 const cashfree = new Cashfree(
-  Cashfree.SANDBOX, // change to Cashfree.PRODUCTION in live
+  Cashfree.SANDBOX, // Change to Cashfree.PRODUCTION in live
   process.env.CASHFREE_CLIENT_ID,
   process.env.CASHFREE_CLIENT_SECRET
 );
 
-//  Create Order
+// Create Order
 const createOrder = async (req, res) => {
   const { amount, customer, orderItems, shippingAddress } = req.body;
 
@@ -17,8 +18,7 @@ const createOrder = async (req, res) => {
       return res.status(401).json({ error: "Please login before buying." });
     }
 
-
-    // 1. Create order in Cashfree
+    // Create order in Cashfree
     const response = await cashfree.PGCreateOrder({
       order_amount: amount,
       order_currency: "INR",
@@ -29,11 +29,11 @@ const createOrder = async (req, res) => {
         customer_phone: customer.customer_phone,
       },
       order_meta: {
-        return_url: `http://localhost:3000/payment/success?order_id={order_id}`,
+        return_url: `${REACT_APP_API_URL}/payment/success?order_id={{order_id}}`,
       },
     });
 
-    // 2. Save in DB with products
+    // Save order in DB
     const newOrder = new Order({
       user: customer.customer_id,
       orderItems,
@@ -58,7 +58,7 @@ const createOrder = async (req, res) => {
   }
 };
 
-//  Verify Payment
+// Verify Payment
 const verifyPayment = async (req, res) => {
   const { order_id } = req.query;
 
@@ -67,7 +67,7 @@ const verifyPayment = async (req, res) => {
 
     const response = await cashfree.PGFetchOrder(order_id);
 
-    // Update DB after successful payment
+    // Update payment status in DB
     await Order.findOneAndUpdate(
       { orderId: order_id },
       { paymentStatus: response.data.order_status === "PAID" ? "Paid" : "Pending" },
@@ -82,7 +82,7 @@ const verifyPayment = async (req, res) => {
       payment_method: response.data.payment_method || null,
     });
   } catch (err) {
-    console.error("Verify Error:", err.response?.data || err.message);
+    console.error("Verify Payment Error:", err.response?.data || err.message);
     res.status(500).json({
       success: false,
       error: err.response?.data || err.message,
