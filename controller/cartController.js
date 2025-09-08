@@ -23,7 +23,7 @@ exports.addToCart = async (req, res) => {
     }
 
     // Check if same product with same attributes already exists
-    const existingItem = cart.items.find(item => 
+    const existingItem = cart.items.find(item =>
       item.productId.toString() === productId &&
       JSON.stringify(item.attributes || {}) === JSON.stringify(attributes || {})
     );
@@ -73,7 +73,7 @@ exports.removeFromCart = async (req, res) => {
     const cart = await Cart.findOne({ userId: req.user.id });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-    cart.items = cart.items.filter(i => 
+    cart.items = cart.items.filter(i =>
       !(i.productId.toString() === productId &&
         JSON.stringify(i.attributes || {}) === JSON.stringify(attributes || {}))
     );
