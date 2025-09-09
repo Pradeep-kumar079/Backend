@@ -9,7 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const AdminRoutes = require('./routes/AdminRoutes');
 const homeRoutes = require('./routes/homeRoutes');
 const cartRoutes = require('./routes/cartRoutes');
-const orderRoutes = require("./routes/orderRoutes");
+const orderRoutes = require('./routes/orderRoutes');
 const UserRoutes = require('./routes/UserRoutes');
 
 const app = express();
@@ -21,30 +21,26 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman, curl
-    if (allowedOrigins.indexOf(origin) === -1) {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);  // Allow Postman, curl
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
       return callback(new Error("CORS policy does not allow access from this origin."), false);
     }
-    return callback(null, true);
   },
   credentials: true,
 }));
 
 
-
-// Body parser
 app.use(express.json());
-
-// Serve uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Database connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', AdminRoutes);
 app.use('/api/home', homeRoutes);
@@ -52,12 +48,11 @@ app.use('/api/user', UserRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
 
-// Handle preflight OPTIONS requests
-app.options('*', cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+// Preflight requests
+// app.options('*', cors({
+//   origin: allowedOrigins,
+//   credentials: true
+// }));
 
-// Start server
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
