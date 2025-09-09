@@ -15,23 +15,29 @@ const UserRoutes = require('./routes/UserRoutes');
 const app = express();
 
 const allowedOrigins = [
-  "https://pradeepdev.site",
-  "https://courageous-sundae-845cb0.netlify.app",
-  "https://68bdc522b7237e490d403ec8--courageous-sundae-845cb0.netlify.app"
+  // "https://pradeepdev.site",
+  // "https://courageous-sundae-845cb0.netlify.app",
+  // "https://68bdc522b7237e490d403ec8--courageous-sundae-845cb0.netlify.app",
+  "https://ecomp079.netlify.app"
 ];
 
+// Apply CORS globally
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);  // Allow Postman, curl
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
-    } else {
-      return callback(new Error("CORS policy does not allow access from this origin."), false);
     }
+    return callback(new Error("CORS policy does not allow access from this origin."), false);
   },
   credentials: true,
 }));
 
+// Handle preflight OPTIONS requests
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -47,12 +53,6 @@ app.use('/api/home', homeRoutes);
 app.use('/api/user', UserRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
-
-// Preflight requests
-// app.options('*', cors({
-//   origin: allowedOrigins,
-//   credentials: true
-// }));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
